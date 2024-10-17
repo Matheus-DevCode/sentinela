@@ -14,9 +14,10 @@ use App\Http\Controllers\TelegramBotController;
 |
 */
 
+// Rota para o webhook do Telegram
+Route::post('/telegram/webhook', [TelegramBotController::class, 'handleWebhook'])->name('telegram.webhook');
 
 
-
-Route::post('/telegram/webhook', [TelegramBotController::class, 'handle']);
-Route::post('/webhook', [TelegramBotController::class, 'handleWebhook']);
+// Rota para verificar o nome
+Route::post('/check-nome', [TelegramBotController::class, 'checkNome'])->name('check.nome');
 
