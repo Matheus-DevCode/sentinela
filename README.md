@@ -1,66 +1,130 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Passo 1: Criar um Bot no Telegram
+Abra o Telegram e pesquise por BotFather.
+Inicie uma conversa com o BotFather e use o comando /start.
+Para criar um novo bot, envie o comando:
+Copiar código
+ /newbot
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Siga as instruções para dar um nome e um nome de usuário único ao seu bot.
+O BotFather fornecerá um Token de Acesso. Guarde esse token, pois ele será necessário para enviar mensagens usando a API.
+coloque no navegador https://api.telegram.org/bo{{token do bot}}Updates e mande mensagem pro bot e verefique se vai aparece o id da pessoa que acabou de mandar mensagem esse id é necessário para o envio de mensagem de volta
+Passo 2: Configurar um Webhook no Laravel (se aplicável)
+No seu projeto Laravel, crie uma rota para lidar com as mensagens recebidas no webhook:
+php
+Copiar código
+Route::post('/webhook', [TelegramBotController::class, 'handleWebhook']);
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+No seu TelegramBotController, adicione um método para processar as mensagens recebidas:
+php
+Copiar código
+<?php
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+namespace App\Http\Controllers;
 
-## Learning Laravel
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+class TelegramBotController extends Controller
+{
+   public function handleWebhook(Request $request)
+   {
+       // Log para verificar se a mensagem está sendo recebida
+       Log::info('Recebendo mensagem do Telegram', ['data' => $request->all()]);
 
-## Laravel Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+       if ($request->has('message')) {
+           $chatId = $request->input('message.chat.id');
+           $text = "Olá! melhiante e ladrao.";
 
-### Premium Partners
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+           // Enviar resposta
+           $this->sendMessage($chatId, $text);
+       } else {
+           Log::warning('Nenhuma mensagem encontrada no payload');
+       }
+   }
 
-## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   private function sendMessage($chatId, $text)
+   {
+       $token = '7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc'; // Coloque seu token do bot
+       $url = "https://api.telegram.org/bot{$token}/sendMessage";
 
-## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+       $data = [
+           'chat_id' => $chatId,
+           'text' => $text,
+       ];
 
-## Security Vulnerabilities
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+       // Envia a requisição para o Telegram
+       $response = \Http::post($url, $data);
 
-## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+       // Log da resposta para depuração
+       Log::info('Resposta do Telegram', ['response' => $response->json()]);
+   }
+}
+
+
+
+Passo 3: Expor seu Servidor Local (usando ngrok)
+Inicie o ngrok apontando para a porta onde o seu servidor está rodando (por exemplo, porta 8000):
+Copiar código
+ngrok http 8000
+
+
+Copie o endereço que o ngrok fornecerá (exemplo: https://2a48-201-59-158-43.ngrok-free.app).
+Passo 4: Definir o Webhook do Telegram
+Para associar o webhook ao seu bot, use o comando abaixo no terminal, substituindo TOKEN_DO_SEU_BOT e URL_DO_SEU_WEBHOOK pelo seu token e pela URL fornecida pelo ngrok:
+Copiar código
+curl -F "url=https://2a48-201-59-158-43.ngrok-free.app/webhook" \
+https://api.telegram.org/botTOKEN_DO_SEU_BOT/setWebhook
+
+Exemplo:
+Copiar código
+curl -F "url=https://2a48-201-59-158-43.ngrok-free.app/webhook" \
+https://api.telegram.org/bot123456789:ABCDEF12345/setWebhook
+
+
+Passo 5: Enviar Mensagens Usando o Bot
+Agora que o webhook está configurado, você pode enviar mensagens de volta para o usuário com base no chat_id que o Telegram fornecerá.
+Exemplo de Comando curl para Enviar Mensagens:
+Enviar uma mensagem para um chat específico usando chat_id:
+bash
+Copiar código
+curl -X POST https://api.telegram.org/botTOKEN_DO_SEU_BOT/sendMessage \
+-H "Content-Type: application/json" \
+-d '{"chat_id": "CHAT_ID_DO_USUÁRIO", "text": "Olá, esta é uma mensagem do bot!"}'
+
+
+Exemplo com valores substituídos:
+bash
+Copiar código
+curl -X POST https://api.telegram.org/bot123456789:ABCDEF12345/sendMessage \
+-H "Content-Type: application/json" \
+-d '{"chat_id": "929173806", "text": "Olá, esta é uma mensagem do bot!"}'
+
+
+Passo 6: Testar a Configuração
+Agora, basta testar o envio de mensagens ao bot. Quando o usuário enviar uma mensagem para o bot, você receberá um chat_id que pode ser usado para enviar respostas de volta.
+
+Resolução de Problemas:
+Página Expirada (Erro 419): Certifique-se de que você está desativando a verificação de CSRF para a rota do webhook, adicionando-a ao arquivo VerifyCsrfToken.php no Laravel:
+php
+Copiar código
+protected $except = [
+    'webhook',  // Desativa CSRF para essa rota
+];
+
+
+Extras:
+Se precisar testar novamente ou reconfigurar o webhook:
+bash
+Copiar código
+curl -F "url=" https://api.telegram.org/botTOKEN_DO_SEU_BOT/deleteWebhook
+
