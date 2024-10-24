@@ -12,7 +12,10 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'telegram/webhook',
-        'check-nome',
+        'telegram/check-nome/{chatId}/{nome_alvo}',
+        'telegram/send-message',
+        'telegram-webhook'
+
+
     ];
 }

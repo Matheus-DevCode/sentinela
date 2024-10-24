@@ -1,0 +1,33 @@
+
+   INFO  Preparing database.  
+
+  Creating migration table ............................................................................................................... 14ms DONE
+
+   INFO  Running migrations.  
+
+  2014_10_12_000000_create_users_table .................................................................................................... 3ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42P07]: Duplicate table: 7 ERROR:  relation "users" already exists (Connection: pgsql, SQL: create table "users" ("id" bigserial not null primary key, "name" varchar(255) not null, "email" varchar(255) not null, "email_verified_at" timestamp(0) without time zone null, "password" varchar(255) not null, "remember_token" varchar(100) null, "created_at" timestamp(0) without time zone null, "updated_at" timestamp(0) without time zone null))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
+    825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕                 );
+    827▕             }
+    828▕ 
+  ➜ 829▕             throw new QueryException(
+    830▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    831▕             );
+    832▕         }
+    833▕     }
+
+      [2m+9 vendor frames [22m
+
+  10  database/migrations/2014_10_12_000000_create_users_table.php:14
+      Illuminate\Support\Facades\Facade::__callStatic("create")
+      [2m+25 vendor frames [22m
+
+  36  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+
