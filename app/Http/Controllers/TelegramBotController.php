@@ -1,89 +1,93 @@
 <?php
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
-use App\Models\UserTelegram;
-use App\Models\Usuario;
 
 class TelegramBotController extends Controller
 {
     public function handleWebhook(Request $request): void
     {
         $data = $request->all();
-        Log::info('Webhook recebido', ['data' => $data]);
+        Log::info('Recebendo webhook:', ['data' => $data]);
 
-        if (isset($data['message']['text'])) {
-            $text = $data['message']['text'];
-            $chatId = $data['message']['chat']['id'];
+        $text = $data['message']['text'] ?? null;
+        $chatId = $data['message']['chat']['id'] ?? null;
 
-            // Inicia a conversa ao pressionar /start
-            if (strtolower($text) === '/start') {
-                $this->startConversation($chatId);
+        if (!$text || !$chatId) {
+            Log::error('Erro: Texto ou chat ID não encontrados na mensagem recebida', ['data' => $data]);
+            return;
+        }
 
-            }
+        $userState = DB::table('telegram_user_states')->where('chat_id', $chatId)->first();
 
-            // Verifica se já temos um nome armazenado na sessão
-            if ($nomeTemp = session('nome_temp')) {
-                if ($this->isPhoneNumber($text)) {
-                    $usuario = Usuario::where('nome', $nomeTemp)
-                        ->where('telefone', $text)
-                        ->first();
-                    if ($usuario) {
-                        $this->registerUserTelegram($chatId, $usuario->id);
-                        $responseText = "Cadastro realizado com sucesso!";
-                    } else {
-                        $responseText = "Usuário não encontrado. Verifique o nome e telefone e tente novamente.";
-                    }
-
-                    // Limpa as sessões temporárias
-                    session()->forget('nome_temp');
-                } else {
-                    $responseText = "Por favor, insira um número de telefone válido (ex: +5511999999999).";
-                }
-
+        if (strtolower($text) === '/start') {
+            $this->startConversation($chatId);
+        } elseif ($userState && $userState->status === 'awaiting_phone') {
+            if ($this->isPhoneNumber($text)) {
+                $this->registerUserTelegram($chatId, $userState->name, $text);
+                DB::table('telegram_user_states')->where('chat_id', $chatId)->delete(); // Limpar estado
             } else {
-                if ($this->isName($text)) {
-                    session(['nome_temp' => $text]);
-                    $responseText = "Obrigado, agora por favor insira seu número de telefone (ex: +5511999999999).";
-                } else {
-//                    log::error($text);
-                    $responseText = "Por favor, informe seu nome completo.";
-                }
+                $this->sendMessage($chatId, "Por favor, informe um número de telefone válido (ex: +5511999999999).");
             }
-
-            // Envia a resposta para o Telegram
-            $this->sendMessage($chatId, $responseText);
+        } elseif ($this->isName($text)) {
+            DB::table('telegram_user_states')->updateOrInsert(
+                ['chat_id' => $chatId],
+                ['name' => $text, 'status' => 'awaiting_phone', 'updated_at' => now()]
+            );
+            $this->requestPhoneNumber($chatId);
+        } else {
+            $this->sendMessage($chatId, "Por favor, informe seu nome completo.");
         }
     }
 
     private function startConversation($chatId): void
     {
-        $text = "Olá! Por favor, informe seu nome completo (ex: João Silva).";
-        $this->sendMessage($chatId, $text);
+        $this->sendMessage($chatId, "Olá! Por favor, informe seu nome completo (ex: João Silva) para iniciar o cadastro.");
+        DB::table('telegram_user_states')->updateOrInsert(
+            ['chat_id' => $chatId],
+            ['status' => 'awaiting_name', 'updated_at' => now()]
+        );
+    }
+
+    private function requestPhoneNumber($chatId): void
+    {
+        $this->sendMessage($chatId, "Agora, informe o seu número de telefone (ex: +5511999999999) para finalizar o cadastro.");
     }
 
     private function isPhoneNumber($text): bool
     {
-        return preg_match('/^\+\d{11,15}$/', $text);
+        return preg_match('/^\+\d{11,15}$/', trim($text));
     }
 
     private function isName($text): bool
     {
-        return preg_match('/^[a-zA-Z\s]+$/', $text) && str_word_count($text) >= 2;
+        return preg_match('/^[\p{L}\s]+$/u', $text) && str_word_count($text) >= 2;
     }
 
-    private function registerUserTelegram($telegramId, $usuarioId): void
+    private function registerUserTelegram($chatId, $name, $phoneNumber): void
     {
-        DB::table('usuario_telegram')->insert([
-            'id_telegram' => $telegramId,
-            'fk_usuario' => $usuarioId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $existingUser = DB::table('usuario_telegram')
+            ->where('id_telegram', $chatId)
+            ->where('Telefone', $phoneNumber)
+            ->exists();
+
+        if ($existingUser) {
+            $responseText = "Usuário já registrado com esse número de telefone.";
+        } else {
+            DB::table('usuario_telegram')->insert([
+                'id_telegram' => $chatId,
+                'nome' => $name,
+                'Telefone' => $phoneNumber,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $responseText = "Usuário registrado com sucesso!";
+        }
+
+        $this->sendMessage($chatId, $responseText);
     }
 
     private function sendMessage($chatId, $text): void
@@ -98,9 +102,29 @@ class TelegramBotController extends Controller
 
         if (!$response->successful()) {
             Log::error('Erro ao enviar mensagem', ['chat_id' => $chatId, 'response' => $response->json()]);
+        } else {
+            Log::info('Mensagem enviada com sucesso', ['chat_id' => $chatId, 'text' => $text]);
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -190,135 +214,128 @@ class TelegramBotController extends Controller
 //
 //use Illuminate\Http\JsonResponse;
 //use Illuminate\Http\Request;
-//use Illuminate\Support\Facades\DB;
 //use Illuminate\Support\Facades\Log;
+//use Illuminate\Support\Facades\Http;
+//use Illuminate\Support\Facades\DB;
 //use App\Models\UserTelegram;
-//use App\Models\Alvo;
-//use App\Models\Prisao;
+//use App\Models\Usuario;
 //
 //class TelegramBotController extends Controller
 //{
 //    public function handleWebhook(Request $request): void
 //    {
-//        Log::info('Recebendo mensagem do Telegram', ['data' => $request->all()]);
+//        $responseText = $request->input("text");
+//        $data = $request->all();
+//        Log::info('Webhook recebido', ['data' => $data]);
 //
-//        if ($request->has('message')) {
-//            $chatId = $request->input('message.chat.id');
-//            $receivedText = $request->input('message.text');
-//            $userName = $request->input('message.from.first_name'); // Captura o nome do usuário
+//        if (isset($data['message']['text'])) {
+//            $text = $data['message']['text'];
+//            $chatId = $data['message']['chat']['id'];
 //
-//            // Verifica se o usuário já está registrado
-//            $user = UserTelegram::where('id_telegram', $chatId)->first();
-//
-//            if (strtolower($receivedText) === '/start') {
+//            Log::info('Leitura da sessão:', ['nome_temp' => session('nome_temp')]);
+//            if (strtolower($text) === '/start') {
 //                $this->startConversation($chatId);
-//            } elseif (is_null($user)) {
-//                // Solicita o número de telefone se o usuário não estiver registrado
-//                if ($this->isPhoneNumber($receivedText)) {
-////                    $this->registerUser($chatId, $userName, $receivedText); // Passa o nome para o registro
+//                return;
+//            } elseif (session('nome_temp')) {
+//                $nomeTemp = session('nome_temp');
+//                Log::info('Nome na sessão:', ['nome_temp' => $nomeTemp]);
+//
+//                if ($this->isPhoneNumber($text)) {
+//                    session(['telefone_temp' => $text]);
+//                    Log::info('Telefone na sessão:', ['telefone_temp' => $text]);
+//                    Log::info('Nome_temp:', ['text' => $nomeTemp]);
+//                    $usuario = Usuario::where('nome', $nomeTemp)
+//                        ->where('telefone', $text)
+//                        ->first();
+//
+//                    if ($usuario) {
+//                        if (!DB::table('usuario_telegram')
+//                            ->where('id_telegram', $chatId)
+//                            ->where('fk_usuario', $usuario->id)
+//                            ->exists()) {
+//                            $this->registerUserTelegram($chatId, $usuario->id);
+//                            $responseText = "Usuário cadastrado com sucesso!";
+//                        } else {
+//                            $responseText = "Usuário já está registrado.";
+//                        }
+//                    } else {
+//                        $responseText = "Telefone não encontrado ou não corresponde ao nome fornecido. Verifique e tente novamente.";
+//                    }
+//
+//                    session()->forget(['nome_temp', 'telefone_temp']);
 //                } else {
-//                    $this->sendMessage($chatId, "Por favor, insira um número de telefone válido (ex: +5511912345678).");
+//                    $responseText = "Por favor, insira um número de telefone válido (ex: +5511999999999).";
+//                }
+//            } elseif ($this->isName($text)) {
+//                Log::info('Nome válido recebido:', ['nome' => $text]);
+//                $usuario = Usuario::where('nome', $text)->first();
+//
+//                if ($usuario) {
+//                    session(['nome_temp' => $text]);
+//                    Log::info('Nome armazenado na sessão:', ['nome_temp' => session('nome_temp')]);
+//                    Log::info('Cadastro da sessão:', ['nome_temp' => session('nome_temp')]);
+//
+//                    $responseText = "Obrigado, agora insira o número de telefone (ex: +5511999999999) para continuar.";
+//                } else {
+//                    $responseText = "Nome não encontrado. Verifique se está escrito corretamente ou se o usuário já está cadastrado.";
 //                }
 //            } else {
-//                // O usuário já está registrado
-//                $this->sendMessage($chatId, "Seu número já está cadastrado: " . $user->Telefone);
+//                log::error(response()->json(['text' => $responseText]));
+//                $responseText = "Por favor, informe seu nome completo.";
+//            }
+//
+//            if (isset($responseText)) {
+//                Log::info('Enviando resposta para o chat ID:', ['chat_id' => $chatId, 'response_text' => $responseText]);
+//                $this->sendMessage($chatId, $responseText);
+//            } else {
+//                Log::error('Nenhuma resposta definida para enviar.', ['data' => $data]);
 //            }
 //        } else {
-//            Log::warning('Nenhuma mensagem encontrada no payload');
+//            Log::error('Texto não encontrado na mensagem recebida', ['data' => $data]);
 //        }
 //    }
 //
+//
 //    private function startConversation($chatId): void
 //    {
-//        $text = "Olá! Por favor, insira o seu número de telefone (ex: +5511912345678).";
+//        $text = "Olá! Por favor, informe seu nome completo (ex: João Silva).";
 //        $this->sendMessage($chatId, $text);
 //    }
 //
 //    private function isPhoneNumber($text): bool
 //    {
-//        return preg_match('/^\+\d{1,3}\d{8,}$/', $text);
+//        return preg_match('/^\+\d{11,15}$/', trim($text));
 //    }
 //
-//    private function registerUser($chatId, $nome, $numero): void
+//    private function isName($text): bool
 //    {
-//        // Atualiza ou cria o usuário na tabela user_telegrams
-//        try {
-//            $user = UserTelegram::updateOrCreate(
-//                ['id_telegram' => $chatId],
-//                ['Telefone' => $numero, 'nome' => $nome] // Adiciona o nome ao registro
-//            );
-//
-//            // Verifica se o usuário foi recém-criado
-//            if ($user->wasRecentlyCreated) {
-//                // Mensagem de sucesso
-//                $this->sendMessage($chatId, "Seu número de telefone foi registrado com sucesso!");
-//
-//            } else {
-//                $this->sendMessage($chatId, "Seu número de telefone já está registrado.");
-//            }
-//
-//        } catch (\Exception $e) {
-//            dd($e->getMessage());
-//        }
+//        return preg_match('/^[\p{L}\s]+$/u', $text) && str_word_count($text) >= 2;
 //    }
 //
-//
-//    public function checkNome($chatId, $nome_alvo): void
+//    private function registerUserTelegram($telegramId, $usuarioId): void
 //    {
-//        $alvo = Alvo::where('nome_alvo', $nome_alvo)->first();
-//
-//        if ($alvo) {
-//            $prisao = Prisao::where('fk_alvo', $alvo->id)->first();
-//
-//            if ($prisao) {
-//                $this->sendMessage($chatId, "O alvo {$alvo->nome_alvo} está preso. Motivo: {$prisao->motivo}.");
-//            } else {
-//                $this->sendMessage($chatId, "O alvo {$alvo->nome_alvo} está livre.");
-//            }
-//        } else {
-//            $this->sendMessage($chatId, "Alvo não encontrado.");
-//        }
+//        DB::table('usuario_telegram')->insert([
+//            'id_telegram' => $telegramId,
+//            'fk_usuario' => $usuarioId,
+//            'created_at' => now(),
+//            'updated_at' => now(),
+//        ]);
 //    }
 //
 //    private function sendMessage($chatId, $text): void
 //    {
-//        $token = env('7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc'); // Coloque seu token do bot no .env
+//        $token = '7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc';
 //        $url = "https://api.telegram.org/bot{$token}/sendMessage";
 //
-//        $data = [
+//        $response = Http::post($url, [
 //            'chat_id' => $chatId,
 //            'text' => $text,
-//        ];
+//        ]);
 //
-//        $response = \Http::post($url, $data);
-//
-//        if ($response->successful()) {
-//            Log::info('Mensagem enviada com sucesso', ['chat_id' => $chatId, 'text' => $text]);
-//        } else {
+//        if (!$response->successful()) {
 //            Log::error('Erro ao enviar mensagem', ['chat_id' => $chatId, 'response' => $response->json()]);
-//        }
-//    }
-//
-////     Novo método para enviar mensagem para um usuário específico
-//    public function sendMessageToUser($userId, $message): void
-//    {
-//        $user = UserTelegram::find($userId);
-//
-//        if ($user) {
-//            $this->sendMessage($user->id_telegram, $message);
 //        } else {
-//            Log::warning("Usuário com ID {$userId} não encontrado.");
+//            Log::info('Mensagem enviada com sucesso', ['chat_id' => $chatId, 'text' => $text]);
 //        }
-//    }
-//
-//    public function exampleSendMessage(Request $request): JsonResponse
-//    {
-//        $userId = $request->input('user_id'); // ID do usuário que você deseja enviar a mensagem
-//        $message = $request->input('message', "Esta é uma mensagem de teste!"); // Mensagem padrão, caso não seja fornecida
-//
-//        // Chama o método para enviar a mensagem
-//        $this->sendMessageToUser($userId, $message);
-//
-//        return response()->json(['success' => true, 'message' => 'Mensagem enviada com sucesso!']);
 //    }
 //}
