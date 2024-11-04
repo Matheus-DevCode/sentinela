@@ -14,6 +14,7 @@ class CreateAlvoTable extends Migration
             $table->foreignId('fk_usuario')->references('id')->on('usuario');
             $table->string('nome_alvo');
             $table->string('status');
+            $table->json('dados')->nullable();
             $table->timestamps();
         });
     }

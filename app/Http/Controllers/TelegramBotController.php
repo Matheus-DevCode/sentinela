@@ -74,7 +74,7 @@ class TelegramBotController extends Controller
             DB::table('usuario_telegram')->insert([
                 'id_telegram' => $chatId,
                 'Telefone' => $phoneNumber,
-                'fk_usuario' => $usuario->id, // A variável $usuario agora está definida
+                'fk_usuario' => $usuario->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -100,4 +100,59 @@ class TelegramBotController extends Controller
             Log::info('Mensagem enviada com sucesso', ['chat_id' => $chatId, 'text' => $text]);
         }
     }
+
+    public function notifyResponsibleForArrestedTargets(): void
+    {
+        // Busca todos os alvos com status 2 (alvo preso)
+        $alvosPresos = DB::table('alvo')
+            ->where('status', 2)
+            ->get();
+
+        // Array de unidades policiais para escolher aleatoriamente
+        $unidadesPoliciais = [
+            'Delegacia Central',
+            'Delegacia Sul',
+            'Delegacia Norte',
+            'Delegacia Leste',
+            'Delegacia Oeste',
+        ];
+
+        foreach ($alvosPresos as $alvo) {
+            // Encontra o responsável pelo alvo (usuário)
+            $usuario = DB::table('usuario')
+                ->where('id', $alvo->fk_usuario)
+                ->first();
+
+            // Verifica se o usuário possui um registro de Telegram na tabela usuario_telegram
+            $usuarioTelegram = DB::table('usuario_telegram')
+                ->where('fk_usuario', $usuario->id)
+                ->first();
+
+            // Gerando dados aleatórios
+            $boletim = 'BO' . mt_rand(100000, 999999); // Gera um número de boletim aleatório
+            $dataPrisao = now()->subDays(mt_rand(1, 30))->toDateString(); // Gera uma data de prisão aleatória nos últimos 30 dias
+            $unidadePolicial = $unidadesPoliciais[array_rand($unidadesPoliciais)]; // Seleciona uma unidade policial aleatória
+
+            // Criar os dados a serem salvos
+            $dados = [
+                'boletim' => $boletim,
+                'data_prisao' => $dataPrisao,
+                'unidade_policial' => $unidadePolicial,
+            ];
+
+            // Salvar os dados na coluna 'dados' do alvo
+            DB::table('alvo')
+                ->where('id', $alvo->id)
+                ->update(['dados' => json_encode($dados)]);
+
+            // Envia mensagem para o Telegram do usuário, caso ele possua um chat_id registrado
+            if ($usuarioTelegram) {
+                $this->sendMessage($usuarioTelegram->id_telegram, "Nome: {$alvo->nome_alvo}\nBoletim: {$dados['boletim']}\nData da Prisão: {$dados['data_prisao']}\nUnidade Policial: {$dados['unidade_policial']}");
+            } else {
+                Log::warning("Usuário com ID {$usuario->id} não possui um registro de Telegram.");
+            }
+        }
+    }
+
+
 }
