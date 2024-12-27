@@ -55,7 +55,7 @@ class TelegramBotController extends Controller
     private function registerUserTelegram($chatId, $phoneNumber): void
     {
         // Verifica se o telefone existe na tabela usuario
-        $usuario = DB::table('usuario')->where('telefone', $phoneNumber)->first();
+        $usuario = DB::table('rastreamento.usuario_telegram')->where('telefone', $phoneNumber)->first();
 
         if (!$usuario) {
             $this->sendMessage($chatId, "Número de telefone não cadastrado no sistema ou telefone incorreto.");
@@ -63,18 +63,15 @@ class TelegramBotController extends Controller
         }
 
         // Verifica se o usuário já está registrado na tabela usuario_telegram
-        $userTelegramExists = DB::table('usuario_telegram')
+        $userTelegramExists = DB::table('rastreamento.usuario_telegram')
             ->where('id_telegram', $chatId)
-            ->where('Telefone', $phoneNumber)
             ->exists();
 
         if ($userTelegramExists) {
             $responseText = "Usuário já registrado com esse número de telefone.";
         } else {
-            DB::table('usuario_telegram')->insert([
+            DB::table('rastreamento.usuario_telegram')->insert([
                 'id_telegram' => $chatId,
-                'Telefone' => $phoneNumber,
-                'fk_usuario' => $usuario->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -105,7 +102,7 @@ class TelegramBotController extends Controller
     {
         // Busca todos os alvos com status 2 (alvo preso)
         $alvosPresos = DB::table('alvo')
-            ->where('status', 2)
+            ->where('fk_status', 2)
             ->get();
 
         // Array de unidades policiais para escolher aleatoriamente
@@ -119,13 +116,13 @@ class TelegramBotController extends Controller
 
         foreach ($alvosPresos as $alvo) {
             // Encontra o responsável pelo alvo (usuário)
-            $usuario = DB::table('usuario')
+            $usuario = DB::table('seguranca.usuario')
                 ->where('id', $alvo->fk_usuario)
                 ->first();
 
             // Verifica se o usuário possui um registro de Telegram na tabela usuario_telegram
             $usuarioTelegram = DB::table('usuario_telegram')
-                ->where('fk_usuario', $usuario->id)
+                ->where('id_telegram', $chatId)
                 ->first();
 
             // Gerando dados aleatórios
@@ -147,7 +144,7 @@ class TelegramBotController extends Controller
 
             // Envia mensagem para o Telegram do usuário, caso ele possua um chat_id registrado
             if ($usuarioTelegram) {
-                $this->sendMessage($usuarioTelegram->id_telegram, "Nome: {$alvo->nome_alvo}\nBoletim: {$dados['boletim']}\nData da Prisão: {$dados['data_prisao']}\nUnidade Policial: {$dados['unidade_policial']}");
+                $this->sendMessage($usuarioTelegram->id_telegram, "Nome: {$alvo->nome}\nBoletim: {$dados['boletim']}\nData da Prisão: {$dados['data_prisao']}\nUnidade Policial: {$dados['unidade_policial']}");
             } else {
                 Log::warning("Usuário com ID {$usuario->id} não possui um registro de Telegram.");
             }

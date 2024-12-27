@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Http\Controllers\TelegramBotController;
+use App\Http\Controllers\SentinelarController;
 
 class NotifyResponsibleForArrestedTargets extends Command
 {
@@ -22,8 +22,8 @@ class NotifyResponsibleForArrestedTargets extends Command
     public function handle(): void
     {
         // Instancia o controlador e chama o método de notificação
-        $telegramBotController = new TelegramBotController();
-        $telegramBotController->notifyResponsibleForArrestedTargets();
+        $sentinelacontroller = new SentinelarController();
+        $sentinelacontroller->notifyResponsibleForArrestedTargets();
 
         $this->info('Notificação enviada para os responsáveis por alvos presos.');
     }

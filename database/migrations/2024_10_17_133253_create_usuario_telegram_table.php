@@ -10,11 +10,9 @@ class CreateUsuarioTelegramTable extends Migration
     {
         Schema::create('usuario_telegram', function (Blueprint $table) {
             $table->id();
-            $table->string('id_telegram')->unique(); // ID do Telegram
-            $table->string('Telefone');
-            $table->unsignedBigInteger('fk_usuario');
-
-            $table->foreign('fk_usuario')->references('id')->on('usuario')->onDelete('cascade');
+            $table->string('id_telegram')->nullable();
+            $table->string('telefone');
+            $table->foreignId('fk_usuario')->constrained('seguranca.usuario','id');
 
             $table->timestamps();
         });

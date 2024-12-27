@@ -50,4 +50,6 @@ class SendTelegramMessage extends Command
             $this->error('Response Body: ' . $response->body());
         }
     }
+//        comando pra enviar a mensagem
+//        php artisan app:send-telegram-message 123456789 'Olá, isso é um teste!'
 }

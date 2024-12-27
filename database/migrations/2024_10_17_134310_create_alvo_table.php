@@ -11,9 +11,9 @@ class CreateAlvoTable extends Migration
     {
         Schema::create('alvo', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fk_usuario')->references('id')->on('usuario');
-            $table->string('nome_alvo');
-            $table->string('status');
+            $table->string('nome');
+            $table->foreignId('fk_usuario')->constrained('seguranca.usuario');
+            $table->foreignId('fk_status')->constrained('rastreamento.status');
             $table->json('dados')->nullable();
             $table->timestamps();
         });
