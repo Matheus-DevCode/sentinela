@@ -62,7 +62,7 @@ Substitua `$YOUR_AUTHTOKEN` pelo token gerado na sua conta do ngrok.
 Quando expor a aplicação vai aparecer esse mensagem 
                                                                                                                                                                                                                                                                                                                                         
 
-`
+```
 Sign up to try new private endpoints https://ngrok.com/new-features-update?ref=private                                                                                            
                                                                                                                                                                                     
 Session Status                online                                                                                                                                                
@@ -73,7 +73,7 @@ Region                        South America (sa)
 Latency                       66ms                                                                                                                                                  
 Web Interface                 http://127.0.0.1:4040                                                                                                                                 
 Forwarding                    https://b99d-177-74-63-178.ngrok-free.app -> http://localhost:8000
-`
+``
 
 #### Caso ocorra erro de autenticação:
 Se ao executar o comando aparecer a mensagem `authentication failed: Usage of ngrok requires a verified account and authtoken`, siga os passos abaixo:
