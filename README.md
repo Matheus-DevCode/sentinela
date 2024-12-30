@@ -57,6 +57,8 @@ ngrok config add-authtoken $YOUR_AUTHTOKEN
 
 Substitua `$YOUR_AUTHTOKEN` pelo token gerado na sua conta do ngrok.
 
+
+
 ### 4. Verifique os Contêineres
 
 Certifique-se de que todos os contêineres estão em execução:
@@ -74,10 +76,10 @@ Esse comando lista todos os contêineres ativos.
 Dependendo de como seu sistema está configurado, você pode acessá-lo através do navegador no seguinte endereço:
 
 ```
-http://localhost:<porta-configurada>
+localhost:<porta-configurada>
 ```
 
-Substitua `<porta-configurada>` pela porta definida no arquivo `docker-compose.yml`. Geralmente é `3000`, `8000`, ou outra que você configurou.
+Substitua `<porta-configurada>` pela porta definida no arquivo `docker-compose.yml`. Geralmente é `8000`, ou outra que você configurou.
 
 ---
 
