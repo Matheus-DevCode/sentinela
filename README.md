@@ -79,11 +79,14 @@ pegue o (Forwarding) `https://b99d-177-74-63-178.ngrok-free.app`.
 Abra outrp terminal não feche o terminal que está expondo sua aplicação e no noo terminal coloque o seguinte comando 
 
 ```bash
-curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=Forwarding/api/telegram-webhook"
+curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=Forwarding/telegram-webhook"
 ```
 Preucure no comando a palavra `( Forwarding )` e substitua pelo valor de dele `https://b99d-177-74-63-178.ngrok-free.app` sempre que aplicação for derrubada e levantada precisar ser feito isso pois esse valor muda
 
-
+Exemplo
+```
+curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=https://b99d-177-74-63-178.ngrok-free.app/telegram-webhook"
+```
 
 
 ### 4. Acesse o bot
