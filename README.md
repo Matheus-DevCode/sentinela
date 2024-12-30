@@ -86,40 +86,11 @@ Preucure no comando a palavra `( Forwarding )` e substitua pelo valor de dele `h
 
 
 
-### 4. Verifique os Contêineres
+### 4. Acesse o bot
 
-Certifique-se de que todos os contêineres estão em execução:
-
+ACESSE ESSE LINK E MANDE UMA MENSAGEM COM `/start` para iniciar uma conversa com o bot 
+LINK: 
 ```bash
-docker ps
+https://t.me/Mdev_teste_Bot
 ```
-
-Esse comando lista todos os contêineres ativos.
-
----
-
-## Acessando o Sistema
-
-Dependendo de como seu sistema está configurado, você pode acessá-lo através do navegador no seguinte endereço:
-
-```
-localhost:<porta-configurada>
-```
-
-Substitua `<porta-configurada>` pela porta definida no arquivo `docker-compose.yml`. Geralmente é `8000`, ou outra que você configurou.
-
----
-
-## Finalizando os Contêineres
-
-Quando quiser interromper a execução do projeto, utilize o comando:
-
-```bash
-docker compose down
-```
-
-Esse comando:
-
-- Para e remove os contêineres criados pelo `docker-compose`.
-- Remove as redes criadas pelo projeto.
 
