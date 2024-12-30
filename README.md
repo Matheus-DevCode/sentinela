@@ -76,7 +76,11 @@ Forwarding                    https://b99d-177-74-63-178.ngrok-free.app -> http:
 
 pegue o (Forwarding) `https://b99d-177-74-63-178.ngrok-free.app`.
 
-curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=https://3aab-177-74-63-178.ngrok-free.app/api/telegram-webhook"
+Abra outrp terminal não feche o terminal que está expondo sua aplicação e no noo terminal coloque o seguinte comando e dentro do parentese coloque o `Forwarding`
+
+```bash
+curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=(`Forwarding`)/api/telegram-webhook"
+```
 
 
 
