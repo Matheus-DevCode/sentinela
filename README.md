@@ -60,8 +60,7 @@ Substitua `$YOUR_AUTHTOKEN` pelo token gerado na sua conta do ngrok.
 ### 4. Ativar o envio de mensagem 
 
 Quando expor a aplicação vai aparecer esse mensagem 
-                                                                                                                                                                                                                                                                                                                                        
-
+                                                                                                                                                                                                                                                        
 ```
 Sign up to try new private endpoints https://ngrok.com/new-features-update?ref=private                                                                                            
                                                                                                                                                                                     
@@ -73,21 +72,9 @@ Region                        South America (sa)
 Latency                       66ms                                                                                                                                                  
 Web Interface                 http://127.0.0.1:4040                                                                                                                                 
 Forwarding                    https://b99d-177-74-63-178.ngrok-free.app -> http://localhost:8000
-``
-
-#### Caso ocorra erro de autenticação:
-Se ao executar o comando aparecer a mensagem `authentication failed: Usage of ngrok requires a verified account and authtoken`, siga os passos abaixo:
-
-1. Acesse o site do [ngrok](https://ngrok.com/) e cadastre-se.
-2. Copie seu token de autenticação, disponível na seção "Your Authtoken".
-3. Configure o token em sua máquina executando o seguinte comando:
-
-```bash
-ngrok config add-authtoken $YOUR_AUTHTOKEN
 ```
 
-Substitua `$YOUR_AUTHTOKEN` pelo token gerado na sua conta do ngrok.
-
+pegue o (Forwarding) `https://b99d-177-74-63-178.ngrok-free.app`.
 
 
 
