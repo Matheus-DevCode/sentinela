@@ -1,130 +1,96 @@
-Passo 1: Criar um Bot no Telegram
-Abra o Telegram e pesquise por BotFather.
-Inicie uma conversa com o BotFather e use o comando /start.
-Para criar um novo bot, envie o comando:
-Copiar código
- /newbot
+# Tutorial de Execução do Projeto
 
-Siga as instruções para dar um nome e um nome de usuário único ao seu bot.
-O BotFather fornecerá um Token de Acesso. Guarde esse token, pois ele será necessário para enviar mensagens usando a API.
-coloque no navegador https://api.telegram.org/bo{{token do bot}}Updates e mande mensagem pro bot e verefique se vai aparece o id da pessoa que acabou de mandar mensagem esse id é necessário para o envio de mensagem de volta
-Passo 2: Configurar um Webhook no Laravel (se aplicável)
-No seu projeto Laravel, crie uma rota para lidar com as mensagens recebidas no webhook:
-php
-Copiar código
-Route::post('/webhook', [TelegramBotController::class, 'handleWebhook']);
+## Requisitos Pré-requisitos
 
+- Certifique-se de ter o [Docker](https://www.docker.com/) e o [Docker Compose](https://docs.docker.com/compose/) instalados em sua máquina.
+- Certifique-se de que o comando `ngrok` está disponível. Caso não esteja, instale-o utilizando:
 
-No seu TelegramBotController, adicione um método para processar as mensagens recebidas:
-php
-Copiar código
-<?php
+```bash
+sudo snap install ngrok
+```
 
+---
 
-namespace App\Http\Controllers;
+## Passo a Passo para Rodar o Projeto
 
+### 1. Clone o Repositório
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+Primeiro, baixe o projeto para sua máquina local:
 
+```bash
+git clone <URL-do-seu-repositorio>
+cd <nome-do-diretorio-clonado>
+```
 
-class TelegramBotController extends Controller
-{
-   public function handleWebhook(Request $request)
-   {
-       // Log para verificar se a mensagem está sendo recebida
-       Log::info('Recebendo mensagem do Telegram', ['data' => $request->all()]);
+### 2. Execute o Docker Compose
 
+No diretório raiz do projeto, execute o seguinte comando:
 
-       if ($request->has('message')) {
-           $chatId = $request->input('message.chat.id');
-           $text = "Olá! melhiante e ladrao.";
+```bash
+docker compose up -d --build
+```
 
+#### O que este comando faz?
 
-           // Enviar resposta
-           $this->sendMessage($chatId, $text);
-       } else {
-           Log::warning('Nenhuma mensagem encontrada no payload');
-       }
-   }
+1. **`docker compose up`**: Cria e inicia os contêineres definidos no arquivo `docker-compose.yml`.
+2. **`-d`**: Roda os contêineres em segundo plano (modo "detached").
+3. **`--build`**: Recria as imagens dos contêineres antes de iniciá-los, garantindo que todas as alterações recentes no projeto sejam refletidas.
 
+### 3. Expor seu Servidor Local (usando ngrok)
 
-   private function sendMessage($chatId, $text)
-   {
-       $token = '7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc'; // Coloque seu token do bot
-       $url = "https://api.telegram.org/bot{$token}/sendMessage";
-
-
-       $data = [
-           'chat_id' => $chatId,
-           'text' => $text,
-       ];
-
-
-       // Envia a requisição para o Telegram
-       $response = \Http::post($url, $data);
-
-
-       // Log da resposta para depuração
-       Log::info('Resposta do Telegram', ['response' => $response->json()]);
-   }
-}
-
-
-
-Passo 3: Expor seu Servidor Local (usando ngrok)
 Inicie o ngrok apontando para a porta onde o seu servidor está rodando (por exemplo, porta 8000):
-Copiar código
+
+```bash
 ngrok http 8000
+```
 
+#### Caso ocorra erro de autenticação:
+Se ao executar o comando aparecer a mensagem `authentication failed: Usage of ngrok requires a verified account and authtoken`, siga os passos abaixo:
 
-Copie o endereço que o ngrok fornecerá (exemplo: https://2a48-201-59-158-43.ngrok-free.app).
-Passo 4: Definir o Webhook do Telegram
-Para associar o webhook ao seu bot, use o comando abaixo no terminal, substituindo TOKEN_DO_SEU_BOT e URL_DO_SEU_WEBHOOK pelo seu token e pela URL fornecida pelo ngrok:
-Copiar código
-curl -F "url=https://2a48-201-59-158-43.ngrok-free.app/webhook" \
-https://api.telegram.org/botTOKEN_DO_SEU_BOT/setWebhook
+1. Acesse o site do [ngrok](https://ngrok.com/) e cadastre-se.
+2. Copie seu token de autenticação, disponível na seção "Your Authtoken".
+3. Configure o token em sua máquina executando o seguinte comando:
 
-Exemplo:
-Copiar código
-curl -F "url=https://2a48-201-59-158-43.ngrok-free.app/webhook" \
-https://api.telegram.org/bot123456789:ABCDEF12345/setWebhook
+```bash
+ngrok config add-authtoken $YOUR_AUTHTOKEN
+```
 
+Substitua `$YOUR_AUTHTOKEN` pelo token gerado na sua conta do ngrok.
 
-Passo 5: Enviar Mensagens Usando o Bot
-Agora que o webhook está configurado, você pode enviar mensagens de volta para o usuário com base no chat_id que o Telegram fornecerá.
-Exemplo de Comando curl para Enviar Mensagens:
-Enviar uma mensagem para um chat específico usando chat_id:
-bash
-Copiar código
-curl -X POST https://api.telegram.org/botTOKEN_DO_SEU_BOT/sendMessage \
--H "Content-Type: application/json" \
--d '{"chat_id": "CHAT_ID_DO_USUÁRIO", "text": "Olá, esta é uma mensagem do bot!"}'
+### 4. Verifique os Contêineres
 
+Certifique-se de que todos os contêineres estão em execução:
 
-Exemplo com valores substituídos:
-bash
-Copiar código
-curl -X POST https://api.telegram.org/bot123456789:ABCDEF12345/sendMessage \
--H "Content-Type: application/json" \
--d '{"chat_id": "929173806", "text": "Olá, esta é uma mensagem do bot!"}'
+```bash
+docker ps
+```
 
+Esse comando lista todos os contêineres ativos.
 
-Passo 6: Testar a Configuração
-Agora, basta testar o envio de mensagens ao bot. Quando o usuário enviar uma mensagem para o bot, você receberá um chat_id que pode ser usado para enviar respostas de volta.
+---
 
-Resolução de Problemas:
-Página Expirada (Erro 419): Certifique-se de que você está desativando a verificação de CSRF para a rota do webhook, adicionando-a ao arquivo VerifyCsrfToken.php no Laravel:
-php
-Copiar código
-protected $except = [
-    'webhook',  // Desativa CSRF para essa rota
-];
+## Acessando o Sistema
 
+Dependendo de como seu sistema está configurado, você pode acessá-lo através do navegador no seguinte endereço:
 
-Extras:
-Se precisar testar novamente ou reconfigurar o webhook:
-bash
-Copiar código
-curl -F "url=" https://api.telegram.org/botTOKEN_DO_SEU_BOT/deleteWebhook
+```
+http://localhost:<porta-configurada>
+```
+
+Substitua `<porta-configurada>` pela porta definida no arquivo `docker-compose.yml`. Geralmente é `3000`, `8000`, ou outra que você configurou.
+
+---
+
+## Finalizando os Contêineres
+
+Quando quiser interromper a execução do projeto, utilize o comando:
+
+```bash
+docker compose down
+```
+
+Esse comando:
+
+- Para e remove os contêineres criados pelo `docker-compose`.
+- Remove as redes criadas pelo projeto.
 
