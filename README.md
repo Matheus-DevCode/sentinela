@@ -76,6 +76,8 @@ Forwarding                    https://b99d-177-74-63-178.ngrok-free.app -> http:
 
 pegue o (Forwarding) `https://b99d-177-74-63-178.ngrok-free.app`.
 
+curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=https://3aab-177-74-63-178.ngrok-free.app/api/telegram-webhook"
+
 
 
 ### 4. Verifique os Contêineres
