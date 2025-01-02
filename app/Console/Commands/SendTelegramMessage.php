@@ -29,7 +29,7 @@ class SendTelegramMessage extends Command
         // Obtém os argumentos do comando
         $chatId = $this->argument('chatId');
         $message = $this->argument('message');
-        $token = '7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc'; // Substitua pelo seu token
+        $token = '7582105005:AAFYllvqbuCGnPjJKSzxGhIhR9lYXa-YlFM'; // Substitua pelo seu token
 
         // URL da API do Telegram para enviar mensagem
         $url = "https://api.telegram.org/bot{$token}/sendMessage";

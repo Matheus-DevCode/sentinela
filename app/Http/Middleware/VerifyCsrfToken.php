@@ -15,6 +15,7 @@ class VerifyCsrfToken extends Middleware
         'telegram/check-nome/{chatId}/{nome_alvo}',
         'telegram/send-message',
         'telegram-webhook',
+        'telegram-webhook/callback'
 
 
     ];
