@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class SentinelarController extends Controller
 {
-    public function handleWebhook(Request $request)
+    public function handleWebhook(Request $request): void
     {
         $data = $request->all();
 
