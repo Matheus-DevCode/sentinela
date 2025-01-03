@@ -18,7 +18,7 @@ sudo snap install ngrok
 Primeiro, baixe o projeto para sua máquina local:
 
 ```bash
-git clone <URL-do-seu-repositorio>
+git clone git@github.com:Matheus-DevCode/sentinela.git
 cd <nome-do-diretorio-clonado>
 ```
 
@@ -59,7 +59,7 @@ Substitua `$YOUR_AUTHTOKEN` pelo token gerado na sua conta do ngrok.
 
 ### 4. Ativar o envio de mensagem 
 
-Quando expor a aplicação vai aparecer esse mensagem 
+Quando expor a aplicação com o comando `ngrok http 8000`  vai aparecer esse mensagem 
                                                                                                                                                                                                                                                         
 ```
 Sign up to try new private endpoints https://ngrok.com/new-features-update?ref=private                                                                                            
@@ -74,14 +74,14 @@ Web Interface                 http://127.0.0.1:4040
 Forwarding                    https://b99d-177-74-63-178.ngrok-free.app -> http://localhost:8000
 ```
 
-pegue o (Forwarding) `https://b99d-177-74-63-178.ngrok-free.app`.
+pegue o (Forwarding): `https://b99d-177-74-63-178.ngrok-free.app`
 
-Abra outrp terminal não feche o terminal que está expondo sua aplicação e no noo terminal coloque o seguinte comando 
+Abra outro terminal! não feche o terminal que está expondo sua aplicação, é no novo terminal coloque o seguinte comando 
 
 ```bash
 curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ_WPPT_kc/setWebhook?url=Forwarding/telegram-webhook"
 ```
-Preucure no comando a palavra `( Forwarding )` e substitua pelo valor de dele `https://b99d-177-74-63-178.ngrok-free.app` sempre que aplicação for derrubada e levantada precisar ser feito isso pois esse valor muda
+Preucure no comando a palavra `( Forwarding )` e substitua pelo valor dele `https://b99d-177-74-63-178.ngrok-free.app` sempre que aplicação for derrubada e levantada precisar ser feito isso pois esse valor muda
 
 Exemplo
 ```
@@ -94,6 +94,6 @@ curl -X POST "https://api.telegram.org/bot7815578518:AAH7D5woM4L-LQXfZgCN21TbPsJ
 ACESSE ESSE LINK E MANDE UMA MENSAGEM COM `/start` para iniciar uma conversa com o bot 
 LINK: 
 ```bash
-https://t.me/Mdev_teste_Bot
+https://t.me/IATheus_Bot
 ```
 
